@@ -1,23 +1,23 @@
 //
-//  HomeViewController.swift
+//  HotKeyViewController.swift
 //  CleanArchitectureDemo
 //
-//  VC 只与 ViewModel 交互，通过 Combine 订阅状态刷新 UI。
+//  Created by cft on 2026/7/11.
 //
 
 import UIKit
 import Combine
 
-final class HomeViewController: UIViewController {
+class HotKeyViewController: UIViewController {
 
-    private let viewModel: HomeViewModel
-    private var banners: [Banner] = []
+    private let viewModel: HotKeyViewModel
+    private var hotKeys: [HotKey] = []
     private var cancellables = Set<AnyCancellable>()
 
     private let tableView: UITableView = {
         let tableView = UITableView()
-        tableView.register(BannerCell.self, forCellReuseIdentifier: BannerCell.reuseIdentifier)
-        tableView.separatorStyle = .none
+        tableView.register(HotKeyTableViewCell.self, forCellReuseIdentifier: HotKeyTableViewCell.reuseIdentifier)
+//        tableView.separatorStyle = .none
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
@@ -29,7 +29,7 @@ final class HomeViewController: UIViewController {
         return indicator
     }()
 
-    init(viewModel: HomeViewModel) {
+    init(viewModel: HotKeyViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -40,27 +40,18 @@ final class HomeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Banner"
+        title = "HotKey"
         view.backgroundColor = .systemBackground
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "next", style: .plain, target: self, action: #selector(nextPage))
-        
+
         setupUI()
         bindViewModel()
-        viewModel.loadBanners()
+        viewModel.loadHotKeys()
     }
-    
-    @objc private func nextPage() {
-        print("next--")
-        let container = DIContainer()
-        let vc = container.makeHotKeyViewController()
-        navigationController?.pushViewController(vc, animated: true)
-    }
-        
 }
 
 // MARK: - UI Setup
 
-private extension HomeViewController {
+private extension HotKeyViewController {
 
     func setupUI() {
         view.addSubview(tableView)
@@ -83,13 +74,13 @@ private extension HomeViewController {
     }
 
     @objc func handleRefresh() {
-        viewModel.loadBanners()
+        viewModel.loadHotKeys()
     }
 }
 
 // MARK: - ViewModel Binding
 
-private extension HomeViewController {
+private extension HotKeyViewController {
 
     func bindViewModel() {
         viewModel.$state
@@ -100,7 +91,7 @@ private extension HomeViewController {
             .store(in: &cancellables)
     }
 
-    func render(_ state: HomeViewModel.State) {
+    func render(_ state: HotKeyViewModel.State) {
         switch state {
         case .idle:
             break
@@ -108,10 +99,10 @@ private extension HomeViewController {
             if tableView.refreshControl?.isRefreshing != true {
                 loadingIndicator.startAnimating()
             }
-        case .loaded(let banners):
+        case .loaded(let hotKeys):
             loadingIndicator.stopAnimating()
             tableView.refreshControl?.endRefreshing()
-            self.banners = banners
+            self.hotKeys = hotKeys
             tableView.reloadData()
         case .error(let message):
             loadingIndicator.stopAnimating()
@@ -123,7 +114,7 @@ private extension HomeViewController {
     func presentError(_ message: String) {
         let alert = UIAlertController(title: "加载失败", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "重试", style: .default) { [weak self] _ in
-            self?.viewModel.loadBanners()
+            self?.viewModel.loadHotKeys()
         })
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
         present(alert, animated: true)
@@ -132,20 +123,25 @@ private extension HomeViewController {
 
 // MARK: - UITableViewDataSource
 
-extension HomeViewController: UITableViewDataSource {
+extension HotKeyViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        banners.count
+        hotKeys.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: BannerCell.reuseIdentifier,
+            withIdentifier: HotKeyTableViewCell.reuseIdentifier,
             for: indexPath
-        ) as? BannerCell else {
+        ) as? HotKeyTableViewCell else {
             return UITableViewCell()
         }
-        cell.configure(with: banners[indexPath.row])
+        cell.configure(with: hotKeys[indexPath.row])
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        
     }
 }

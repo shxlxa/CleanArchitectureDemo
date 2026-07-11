@@ -30,4 +30,6 @@ struct APIEndpoint {
 
 extension APIEndpoint {
     static let banner = APIEndpoint(path: "/banner/json", method: .get)
+    
+    static let hotKey = APIEndpoint(path: "/hotkey/json", method: .get)
 }

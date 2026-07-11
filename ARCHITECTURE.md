@@ -224,3 +224,4 @@ UseCase 是业务动作的唯一入口。今天"获取 Banner"只是透传，明
 | 数据实现 + DTO 映射 | `Data/Repositories/BannerRepositoryImpl.swift` |
 | 网络封装 | `Network/NetworkService.swift` |
 | 依赖组装 | `Application/DIContainer.swift` |
+
