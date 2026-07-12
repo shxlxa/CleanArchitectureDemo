@@ -5,8 +5,7 @@
 //  Created by cft on 2026/7/11.
 //
 
-import UIKit
-import Combine
+import Foundation
 
 class HotKeyViewModel {
     
@@ -17,7 +16,13 @@ class HotKeyViewModel {
         case error(String)
     }
     
-    @Published var state: State = .idle
+    var onStateChanged: ((State) -> Void)?
+    
+    private var _state: State = .idle {
+        didSet { onStateChanged?(_state) }
+    }
+    
+    var state: State { _state }
     
     private let getHotKeysUseCase: GetHotKeysUseCase
     
@@ -26,15 +31,15 @@ class HotKeyViewModel {
     }
     
     func loadHotKeys() {
-        state = .loading
+        _state = .loading
         Task {
             do {
                 let hotKeys = try await getHotKeysUseCase.execute()
                 print("✅ HotKeys 请求成功，共 \(hotKeys.count) 条：\(hotKeys)")
-                state = .loaded(hotKeys)
+                _state = .loaded(hotKeys)
             } catch {
                 print("❌ HotKeys 请求失败：\(error)")
-                state = .error(error.localizedDescription)
+                _state = .error(error.localizedDescription)
             }
         }
     }

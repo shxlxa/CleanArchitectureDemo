@@ -6,13 +6,11 @@
 //
 
 import UIKit
-import Combine
 
 class HotKeyViewController: UIViewController {
 
     private let viewModel: HotKeyViewModel
     private var hotKeys: [HotKey] = []
-    private var cancellables = Set<AnyCancellable>()
 
     private let tableView: UITableView = {
         let tableView = UITableView()
@@ -83,12 +81,11 @@ private extension HotKeyViewController {
 private extension HotKeyViewController {
 
     func bindViewModel() {
-        viewModel.$state
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] state in
+        viewModel.onStateChanged = { [weak self] state in
+            DispatchQueue.main.async {
                 self?.render(state)
             }
-            .store(in: &cancellables)
+        }
     }
 
     func render(_ state: HotKeyViewModel.State) {
